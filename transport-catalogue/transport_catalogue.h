@@ -42,21 +42,30 @@ namespace transport {
 			}
 		};
 
+		struct BusInfo {
+			int stops;
+			int uniq_stops;
+			double dist;
+		};
+
+		struct StopInfo {
+			std::string info;
+		};
+
 		
 		
 			void AddStop(const std::string& name, coord::Coordinates coords);
 			void AddBus(const std::string& number, const std::vector<std::string>& routes);
-			Stop* FindStop(const std::string_view& name);
-			Bus* FindBus(const std::string_view& number) const;
-			//void FillingDistance(Stop* stop);
-			std::tuple<int, int, double > GetBusInfo(std::string_view request) const;
-			std::string GetStopInfo(std::string_view request) const;
+			Stop* FindStop(std::string_view name);
+			Bus* FindBus(std::string_view number) const;
+			BusInfo GetBusInfo(std::string_view request) const;
+			StopInfo GetStopInfo(std::string_view request) const;
 
 		
 	private:
-		std::deque<Stop> Stops;
+		std::deque<Stop> stops_;
 		std::unordered_map<std::string_view, Stop*> stop_name_to_stop;
-		std::deque<Bus> Buses;
+		std::deque<Bus> buses_;
 		std::unordered_map<std::string_view, Bus*> busname_to_bus;
 		
 

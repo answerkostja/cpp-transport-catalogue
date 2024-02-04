@@ -10,10 +10,10 @@ namespace transport {
 	void TransportCatalogue::AddStop(const std::string& name, coord::Coordinates coords) {
 		TransportCatalogue::Stop add_stop = Stop{ name, coords };
 
-		Stops.push_back(std::move(add_stop));
-		std::string_view name_sv = Stops[Stops.size() - 1].name;
+		stops_.push_back(std::move(add_stop));
+		std::string_view name_sv = stops_[stops_.size() - 1].name;
 
-		stop_name_to_stop.insert({ name_sv, &Stops[Stops.size() - 1] });
+		stop_name_to_stop.insert({ name_sv, &stops_[stops_.size() - 1] });
 		
 
 	}
@@ -25,19 +25,19 @@ namespace transport {
 			routes_link.push_back(std::move(link));
 		}
 		TransportCatalogue::Bus add_bus = { number, std::move(routes_link) };
-		Buses.push_back(std::move(add_bus));
-		std::string_view number_sv = Buses[Buses.size() - 1].number;
-		busname_to_bus.insert({ std::move(number_sv),&Buses[Buses.size() - 1] });
+		buses_.push_back(std::move(add_bus));
+		std::string_view number_sv = buses_[buses_.size() - 1].number;
+		busname_to_bus.insert({ std::move(number_sv),&buses_[buses_.size() - 1] });
 	}
 
 
-	TransportCatalogue::Stop* TransportCatalogue::FindStop(const std::string_view& name) {
+	TransportCatalogue::Stop* TransportCatalogue::FindStop(std::string_view name) {
 
 		return (*(stop_name_to_stop.find(name))).second;
 	}
 
 
-	TransportCatalogue::Bus* TransportCatalogue::FindBus(const std::string_view& number) const {
+	TransportCatalogue::Bus* TransportCatalogue::FindBus(std::string_view number) const {
 		if (busname_to_bus.find(number) == busname_to_bus.end()) {
 			return nullptr;
 		}
@@ -47,7 +47,7 @@ namespace transport {
 
 
 
-	std::tuple<int, int, double > TransportCatalogue::GetBusInfo(std::string_view request) const {
+	TransportCatalogue::BusInfo TransportCatalogue::GetBusInfo(std::string_view request) const {
 		int stops = 0;
 		int unique_stops = 0;
 		double length = 0.;
@@ -78,10 +78,10 @@ namespace transport {
 
 	}
 
-	std::string TransportCatalogue::GetStopInfo(std::string_view request) const {
+	TransportCatalogue::StopInfo TransportCatalogue::GetStopInfo(std::string_view request) const {
 
 		if (stop_name_to_stop.count(request) == 0) {
-			return std::string{ "No stops"s };
+			return StopInfo{ std::string{ "No stops"s } };
 		}
 
 
@@ -99,6 +99,6 @@ namespace transport {
 		for (auto i : bus) {
 			result += static_cast<std::string>(i) + ' ';
 		}
-		return result;
+		return StopInfo{ result };
 	};
 }

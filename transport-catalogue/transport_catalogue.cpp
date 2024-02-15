@@ -5,16 +5,64 @@
 
 namespace transport {
 
-	
-
-	void TransportCatalogue::AddStop(const std::string& name, coord::Coordinates coords) {
-		TransportCatalogue::Stop add_stop = Stop{ name, coords };
-
-		stops_.push_back(std::move(add_stop));
-		std::string_view name_sv = stops_[stops_.size() - 1].name;
-
-		stop_name_to_stop.insert({ name_sv, &stops_[stops_.size() - 1] });
+	void TransportCatalogue::FillingDistance(Stop* stop, std::unordered_map<std::string, int> map_dist) {
 		
+			for (auto [i, j] : map_dist) {
+				if (stop_name_to_stop.count(i) != 0) {
+					StopPtrPair p = { stop, stop_name_to_stop.at(i) };
+					int dist = j;
+					if (distance.count(p) > 0) {
+						distance.erase(p);
+					}
+					distance.insert({ std::move(p), dist });
+					StopPtrPair p_reverse = {  stop_name_to_stop.at(i), stop };
+					if (distance.count(p_reverse) == 0) {
+						distance.insert({ std::move(p_reverse), dist });
+					}
+					
+				}
+				else if (stop_name_to_stop.count(i) == 0) {
+					TransportCatalogue::Stop add_stop = Stop{ i, {} };
+
+					stops_.push_back(std::move(add_stop));
+					std::string_view name_sv = stops_[stops_.size() - 1].name;
+
+					stop_name_to_stop.insert({ name_sv, &stops_[stops_.size() - 1] });
+
+					StopPtrPair p = { stop, stop_name_to_stop.at(i) };
+					int dist = j;
+					if (distance.count(p) > 0) {
+						distance.erase(p);
+					}
+					distance.insert({ std::move(p), dist });
+					StopPtrPair p_reverse = { stop_name_to_stop.at(i), stop };
+					if (distance.count(p_reverse) == 0) {
+						distance.insert({ std::move(p_reverse), dist });
+					}
+					
+				}
+			}
+				
+		
+	}
+
+	void TransportCatalogue::AddStop(const std::string& name, coord::Coordinates coords, std::unordered_map<std::string, int> map_dist) {
+		
+		if (stop_name_to_stop.count(name)) {
+			stop_name_to_stop.at(name)->coords = coords;
+		}
+		else {
+			TransportCatalogue::Stop add_stop = Stop{ name, coords };
+
+
+
+			stops_.push_back(std::move(add_stop));
+			std::string_view name_sv = stops_[stops_.size() - 1].name;
+
+			stop_name_to_stop.insert({ name_sv, &stops_[stops_.size() - 1] });
+		}
+		
+		TransportCatalogue::FillingDistance(stop_name_to_stop.at(name), map_dist);
 
 	}
 
@@ -50,13 +98,13 @@ namespace transport {
 	TransportCatalogue::BusInfo TransportCatalogue::GetBusInfo(std::string_view request) const {
 		int stops = 0;
 		int unique_stops = 0;
-		double length = 0.;
-
+		int length = 0.;
+		double curvature = 0.;
 
 		Bus* bus = TransportCatalogue::FindBus(request);
 
 		if (bus == nullptr) {
-			return { 0, 0, 0 };
+			return { 0, 0, 0, 0 };
 		}
 
 		stops = static_cast<int>((*bus).stops.size());
@@ -67,14 +115,19 @@ namespace transport {
 		}
 		unique_stops = static_cast<int>(set_unique_stops.size());
 
+		double dist = 0.;
+
 		for (auto i = 0; i < (*(bus)).stops.size() - 1; i++) {
 
-			double dist = ComputeDistance((*bus).stops[i]->coords, (*bus).stops[i + 1]->coords);
-
-			length += dist;
+			dist += ComputeDistance((*bus).stops[i]->coords, (*bus).stops[i + 1]->coords);
+			StopPtrPair p = {(*bus).stops[i], (*bus).stops[i + 1]};
+			length += distance.at(p);
+			
 		}
 
-		return { stops, unique_stops, length };
+		curvature = length / dist;
+
+		return { stops, unique_stops, length,  curvature };
 
 	}
 

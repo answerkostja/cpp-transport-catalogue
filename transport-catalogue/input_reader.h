@@ -12,6 +12,7 @@ using namespace std::literals;
 namespace transport {
     namespace detail {
         coord::Coordinates ParseCoordinates(std::string_view str);
+        void ParseDistance(std::string_view str, std::unordered_map<std::string, int>& map_dist);
         std::string_view Trim(std::string_view string);
         std::vector<std::string_view> Split(std::string_view string, char delim);
         std::vector<std::string_view> ParseRoute(std::string_view route);
@@ -29,7 +30,8 @@ namespace transport {
 
             std::string command;      // Название команды
             std::string id;           // id маршрута или остановки
-            std::string description;  // Параметры команды
+            std::string description;
+            std::string distantion;// Параметры команды
         };
 
     }

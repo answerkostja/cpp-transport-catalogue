@@ -42,22 +42,35 @@ namespace transport {
 			}
 		};
 
+		class StopPtrPair_Hesher {
+		public:
+			size_t operator() (const StopPtrPair& ptr) const {
+				size_t s_start = s_hasher_((*ptr.start).name);
+				size_t s_end = s_hasher_((*ptr.end).name);
+				return s_start + s_end * 1000;
+
+			}
+	
+		private:
+			std::hash<std::string> s_hasher_;
+		};
+
 		struct BusInfo {
-			int stops;
-			int uniq_stops;
-			double dist;
+			int stops = 0;
+			int unique_stops = 0;
+			int length = 0.;
+			double curvature = 0.;
 		};
 
 		struct StopInfo {
 			std::string info;
 		};
-
 		
-		
-			void AddStop(const std::string& name, coord::Coordinates coords);
+			void AddStop(const std::string& name, coord::Coordinates coords, std::unordered_map<std::string, int> map_dist);
 			void AddBus(const std::string& number, const std::vector<std::string>& routes);
 			Stop* FindStop(std::string_view name);
 			Bus* FindBus(std::string_view number) const;
+			void FillingDistance(Stop* stop, std::unordered_map<std::string, int> map_dist);
 			BusInfo GetBusInfo(std::string_view request) const;
 			StopInfo GetStopInfo(std::string_view request) const;
 
@@ -67,7 +80,7 @@ namespace transport {
 		std::unordered_map<std::string_view, Stop*> stop_name_to_stop;
 		std::deque<Bus> buses_;
 		std::unordered_map<std::string_view, Bus*> busname_to_bus;
-		
+		std::unordered_map<StopPtrPair, int, StopPtrPair_Hesher> distance;
 
 
 	};

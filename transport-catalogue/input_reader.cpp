@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cassert>
 #include <iterator>
+
 namespace transport {
 
     /**
@@ -14,6 +15,7 @@ namespace transport {
 
             auto not_space = str.find_first_not_of(' ');
             auto comma = str.find(',');
+            auto comma2 = str.find(',', comma + 1);
 
             if (comma == str.npos) {
                 return { nan, nan };
@@ -22,9 +24,28 @@ namespace transport {
             auto not_space2 = str.find_first_not_of(' ', comma + 1);
 
             double lat = std::stod(std::string(str.substr(not_space, comma - not_space)));
-            double lng = std::stod(std::string(str.substr(not_space2)));
+            double lng = std::stod(std::string(str.substr(not_space2, comma2 - not_space2)));
 
             return { lat, lng };
+        }
+        /**
+     * Парсит строку вида "7500m to Rossoshanskaya ulitsa, 1800m to Biryusinka, 2400m to Universam" и возвращает словарь
+     */
+         void ParseDistance(std::string_view str, std::unordered_map<std::string, int>& map_dist) {
+            if (str.empty() || str.find_first_not_of(' ') == str.npos) {
+                return;
+            }
+            auto not_space = str.find_first_not_of(' ');
+            auto separator = str.find('m');
+            auto comma = str.find(',');
+
+            int dist = std::stoi(std::string(str.substr(not_space, separator - not_space)));
+            std::string name = std::string(str.substr(separator + 5, comma - separator - 5));
+            map_dist.insert({ name, dist });
+            if (comma != str.npos) {
+                ParseDistance(std::string(str.substr(comma + 1)), map_dist);
+            }
+            
         }
 
         /**
@@ -92,9 +113,21 @@ namespace transport {
                 return {};
             }
 
+            auto comma = line.find(',');
+            auto comma2 = line.find(',', comma + 1);
+
+            if (comma2 == line.npos) {
+                static std::string emp = ""s;
+                return { std::string(line.substr(0, space_pos)),
+                    std::string(line.substr(not_space, colon_pos - not_space)),
+                    std::string(line.substr(colon_pos + 1, comma2 - colon_pos + 1)),
+                    emp };
+            }
+
             return { std::string(line.substr(0, space_pos)),
                     std::string(line.substr(not_space, colon_pos - not_space)),
-                    std::string(line.substr(colon_pos + 1)) };
+                    std::string(line.substr(colon_pos + 1, comma2 - colon_pos + 1)),
+                    std::string(line.substr(comma2 + 1))};
         }
     }
         void InputReader::ParseLine(std::string_view line) {
@@ -117,7 +150,9 @@ namespace transport {
         for (detail::CommandDescription com : commands_) {
             if (com.command == "Stop"s) {
                 coord::Coordinates coordinates = detail::ParseCoordinates(com.description);
-                catalogue.AddStop(com.id, coordinates);
+                std::unordered_map<std::string, int> map_distance;
+                detail::ParseDistance(com.distantion, map_distance);
+                catalogue.AddStop(com.id, coordinates, map_distance);
                 continue;
             }
             if (com.command == "Bus"s) {
@@ -130,6 +165,6 @@ namespace transport {
             }
         }
 
-        
+        // Реализуйте метод самостоятельно
     }
 }

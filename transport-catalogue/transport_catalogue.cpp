@@ -5,7 +5,7 @@
 
 namespace transport {
 
-	void TransportCatalogue::FillingDistance(Stop* stop, std::unordered_map<std::string, int> map_dist) {
+	void TransportCatalogue::FillDistance(Stop* stop, const std::unordered_map<std::string, int>& map_dist) {
 		
 			for (auto [i, j] : map_dist) {
 				if (stop_name_to_stop.count(i) != 0) {
@@ -62,7 +62,7 @@ namespace transport {
 			stop_name_to_stop.insert({ name_sv, &stops_[stops_.size() - 1] });
 		}
 		
-		TransportCatalogue::FillingDistance(stop_name_to_stop.at(name), map_dist);
+		TransportCatalogue::FillDistance(stop_name_to_stop.at(name), map_dist);
 
 	}
 
@@ -139,11 +139,11 @@ namespace transport {
 
 
 		std::set<std::string_view> bus;
-		for (auto [x, y] : busname_to_bus) {
-			for (auto i : (*y).stops) {
+		for (auto [name, link] : busname_to_bus) {
+			for (auto i : (*link).stops) {
 
 				if ((*i).name == request) {
-					bus.insert(x);
+					bus.insert(name);
 				}
 
 			}

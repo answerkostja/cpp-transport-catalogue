@@ -70,7 +70,7 @@ namespace transport {
 			void AddBus(const std::string& number, const std::vector<std::string>& routes);
 			Stop* FindStop(std::string_view name);
 			Bus* FindBus(std::string_view number) const;
-			void FillingDistance(Stop* stop, std::unordered_map<std::string, int> map_dist);
+			void FillDistance(Stop* stop, const std::unordered_map<std::string, int>& map_dist);
 			BusInfo GetBusInfo(std::string_view request) const;
 			StopInfo GetStopInfo(std::string_view request) const;
 

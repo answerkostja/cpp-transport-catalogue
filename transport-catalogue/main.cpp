@@ -1,35 +1,27 @@
-#include <iostream>
-#include <string>
+#include <cstdio>
 
-#include "input_reader.h"
-#include "stat_reader.h"
 
-using namespace std;
-using namespace transport;
+//#include "request_handler.h"
+#include "json_reader.h"
+#include "map_renderer.h"
+#include "request_handler.h"
 
 int main() {
+    JSON in_json;
 
-    TransportCatalogue catalogue;
-
-    int base_request_count;
-    cin >> base_request_count >> ws;
-
-    {
-        InputReader reader;
-        for (int i = 0; i < base_request_count; ++i) {
-            string line;
-            getline(cin, line);
-            reader.ParseLine(line);
-        }
-        reader.ApplyCommands(catalogue);
-    }
-
-    int stat_request_count;
-    cin >> stat_request_count >> ws;
-    for (int i = 0; i < stat_request_count; ++i) {
-        string line;
-        getline(cin, line);
-        ParseAndPrintStat(catalogue, line, cout);
-    }
-    return 0;
+    in_json.DestructJSON();
+    in_json.CreateJSON();
+    
+    in_json.PrintJSON();
+   
+    
+    
+    /*
+     * Примерная структура программы:
+     *
+     * Считать JSON из stdin
+     * Построить на его основе JSON базу данных транспортного справочника
+     * Выполнить запросы к справочнику, находящиеся в массива "stat_requests", построив JSON-массив
+     * с ответами Вывести в stdout ответы в виде JSON
+     */
 }

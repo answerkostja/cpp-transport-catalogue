@@ -13,25 +13,10 @@ namespace renderer {
         };
     }
 
-    void renderer::MapRenderer::Render() {
-        using namespace std::literals;
-        svg::Document doc;
-        std::vector<geo::Coordinates> geo_coords;
-        size_t number_color = 0;
+    void renderer::MapRenderer::RenderLine(svg::Document& doc, size_t& number_color, 
+        std::deque<transport::Domain::Bus>& buses, SphereProjector& sph_proj_) {
 
-        std::deque<transport::Domain::Bus> buses = domain_.AsBus();
-
-        std::sort(buses.begin(), buses.end(), [](const transport::Domain::Bus left, const transport::Domain::Bus right) {
-            return (left.number < right.number);
-            });
-
-
-        for (auto bus : buses) {
-            for (auto stop : bus.stops) {
-                geo_coords.push_back(stop->coords);
-            }
-        }
-        SphereProjector sph_proj_(geo_coords.begin(), geo_coords.end(), settings_.width, settings_.height, settings_.padding);
+        
 
         for (auto bus : buses) {
             svg::Polyline polyline;
@@ -48,7 +33,12 @@ namespace renderer {
                 number_color++;
             }
         }
-        number_color = 0;
+
+    }
+
+    void renderer::MapRenderer::RenderBus(svg::Document& doc, size_t& number_color, std::deque<transport::Domain::Bus>& buses, SphereProjector& sph_proj_) {
+
+        using namespace std::literals;
 
         for (auto bus : buses) {
 
@@ -105,6 +95,13 @@ namespace renderer {
             }
         }
 
+
+    }
+
+    void renderer::MapRenderer::RenderStop(svg::Document& doc, std::deque<transport::Domain::Bus>& buses, SphereProjector& sph_proj_) {
+        
+        using namespace std::literals;
+        
         std::set<transport::Domain::Stop> stop_set;
 
         for (auto bus : buses) {
@@ -151,7 +148,39 @@ namespace renderer {
             doc.AddPtr(std::make_unique<svg::Text>(text));
 
         }
+    }
 
+
+    void renderer::MapRenderer::Render() {
+        
+        svg::Document doc;
+        std::vector<geo::Coordinates> geo_coords;
+        size_t number_color = 0;
+
+        std::deque<transport::Domain::Bus> buses = tc_.AsBus();
+
+        std::sort(buses.begin(), buses.end(), [](const transport::Domain::Bus left, const transport::Domain::Bus right) {
+            return (left.number < right.number);
+            });
+
+
+        for (auto bus : buses) {
+            for (auto stop : bus.stops) {
+                geo_coords.push_back(stop->coords);
+            }
+        }
+        SphereProjector sph_proj_(geo_coords.begin(), geo_coords.end(), settings_.width, settings_.height, settings_.padding);
+
+        renderer::MapRenderer::RenderLine(doc,  number_color,  buses, sph_proj_);
+
+        
+        number_color = 0;
+
+        renderer::MapRenderer::RenderBus(doc, number_color, buses, sph_proj_);
+
+        renderer::MapRenderer::RenderStop(doc, buses, sph_proj_);
+
+        
 
         std::ostringstream sout;
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "svg.h"
-#include "domain.h"
+#include "transport_catalogue.h"
 
 
 #include <algorithm>
@@ -104,11 +104,17 @@ namespace renderer {
 
     public:
 
-        MapRenderer(transport::Domain domain, RenderSettings settings)
-            :domain_(domain),
+        MapRenderer(transport::TransportCatalogue tc, RenderSettings settings)
+            :tc_(tc),
             settings_(settings) {
 
         }
+
+        void RenderLine(svg::Document& doc, size_t& number_color, std::deque<transport::Domain::Bus>& buses, SphereProjector& sph_proj_);
+
+        void RenderBus(svg::Document& doc, size_t& number_color, std::deque<transport::Domain::Bus>& buses, SphereProjector& sph_proj_);
+
+        void RenderStop(svg::Document& doc, std::deque<transport::Domain::Bus>& buses, SphereProjector& sph_proj_);
 
         void Render();
 
@@ -118,7 +124,7 @@ namespace renderer {
 
     private:
 
-        transport::Domain domain_;
+        transport::TransportCatalogue tc_;
         RenderSettings settings_;
         std::string map_;
     };

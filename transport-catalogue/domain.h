@@ -61,7 +61,7 @@ namespace transport {
 			}
 		};
 
-		class StopPtrPair_Hesher {
+		class StopPtrPairHasher {
 		public:
 			size_t operator() (const StopPtrPair& ptr) const {
 				size_t s_start = s_hasher_((*ptr.start).name);
@@ -85,22 +85,9 @@ namespace transport {
 			std::string info;
 		};
 
-		std::deque<Bus> AsBus() {
-			return buses_;
-		}
+		
 
-		std::deque<Stop> AsStop() {
-			return stops_;
-		}
-
-	protected:
-
-
-		std::deque<Stop> stops_;
-		std::unordered_map<std::string_view, Stop*> stop_name_to_stop;
-		std::deque<Bus> buses_;
-		std::unordered_map<std::string_view, Bus*> busname_to_bus;
-		std::unordered_map<StopPtrPair, int, StopPtrPair_Hesher> distance;
+	
 		
 	};
 

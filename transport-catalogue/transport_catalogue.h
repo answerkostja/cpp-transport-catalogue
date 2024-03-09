@@ -27,6 +27,17 @@ namespace transport {
 		void FillDistance(Stop* stop, const std::unordered_map<std::string, int>& map_dist);
 		BusInfo GetBusInfo(std::string_view request) const;
 		std::set<std::string> GetStopInfo(std::string_view request) const;
+
+		std::deque<Bus> AsBus(); 
+
+		std::deque<Stop> AsStop(); 
+
+	private:
+		std::deque<Stop> stops_;
+		std::unordered_map<std::string_view, Stop*> stop_name_to_stop;
+		std::deque<Bus> buses_;
+		std::unordered_map<std::string_view, Bus*> busname_to_bus;
+		std::unordered_map<StopPtrPair, int, StopPtrPairHasher> distance;
 		
 		
 

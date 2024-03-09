@@ -166,4 +166,12 @@ namespace transport {
 		return  result;
 	};
 
+	std::deque<transport::Domain::Bus> TransportCatalogue::AsBus() {
+		return buses_;
+	}
+
+	std::deque<transport::Domain::Stop> TransportCatalogue::AsStop() {
+		return stops_;
+	}
+
 }

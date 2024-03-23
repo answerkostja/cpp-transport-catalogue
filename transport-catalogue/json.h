@@ -17,6 +17,8 @@
 
 namespace json {
 
+    
+
     struct PrintContext {
         std::ostream& out;
         int indent_step = 4;
@@ -88,7 +90,7 @@ namespace json {
 
         bool IsArray() const;
 
-        bool IsMap() const;
+        bool IsDict() const;
 
 
 
@@ -102,7 +104,7 @@ namespace json {
 
         const Array& AsArray() const;
 
-        const Dict& AsMap() const;
+        const Dict& AsDict() const;
 
 
 
@@ -111,6 +113,8 @@ namespace json {
 
 
         const Value& GetValue() const { return value_; }
+
+        Value& GetValue() { return value_; }
 
 
     private:

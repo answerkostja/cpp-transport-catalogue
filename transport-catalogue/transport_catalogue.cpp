@@ -127,7 +127,7 @@ namespace transport {
 
 		double dist = 0.;
 
-		for (auto i = 0; i < (*(bus)).stops.size() - 1; i++) {
+		for (size_t i = 0; i < (*(bus)).stops.size() - 1; i++) {
 
 			dist += ComputeDistance((*bus).stops[i]->coords, (*bus).stops[i + 1]->coords);
 			StopPtrPair p = { (*bus).stops[i], (*bus).stops[i + 1] };

@@ -19,7 +19,7 @@ void JSON::FillStop(const json::Dict& dict) {
 		
 			coords.lng = dict.at("longitude"s).AsDouble();
 
-			for (const auto& [key2, value2] : dict.at("road_distances"s).AsMap()) {
+			for (const auto& [key2, value2] : dict.at("road_distances"s).AsDict()) {
 				map_dist.insert({ key2, value2.AsInt() });
 			}
 		
@@ -179,21 +179,21 @@ void JSON::FillRender(const json::Dict& dict) {
 void JSON::Fill(std::string line) {
 	json::Document doc = json::LoadJSON(line);
 	json::Node node = doc.GetRoot();
-	if (node.IsMap()) {
-		for (const auto& [key, value] : node.AsMap()) {
+	if (node.IsDict()) {
+		for (const auto& [key, value] : node.AsDict()) {
 			if (key == "base_requests"s) {
 				if (value.IsArray()) {
 					for (auto content : value.AsArray()) {
-						if (content.IsMap()) {
-							if (content.AsMap().at("type"s) == "Stop"s) {
-								FillStop(content.AsMap());
+						if (content.IsDict()) {
+							if (content.AsDict().at("type"s) == "Stop"s) {
+								FillStop(content.AsDict());
 							}
 						}
 					}
 					for (auto content : value.AsArray()) {
-						if (content.IsMap()) {
-							if (content.AsMap().at("type"s) == "Bus"s) {
-								FillBus(content.AsMap());
+						if (content.IsDict()) {
+							if (content.AsDict().at("type"s) == "Bus"s) {
+								FillBus(content.AsDict());
 									}
 								}
 								
@@ -207,17 +207,17 @@ void JSON::Fill(std::string line) {
 			if (key == "stat_requests"s) {
 				if (value.IsArray()) {
 					for (auto content : value.AsArray()) {
-						if (content.IsMap()) {
-							//for (const auto& [key2, value2] : content.AsMap()) {
-								FillCommand(content.AsMap());
+						if (content.IsDict()) {
+							//for (const auto& [key2, value2] : content.AsDict()) {
+								FillCommand(content.AsDict());
 							//}
 						}
 					}
 				}
 			}
 			if (key == "render_settings"s) {
-				if (value.IsMap()) {
-					FillRender(value.AsMap());
+				if (value.IsDict()) {
+					FillRender(value.AsDict());
 				}
 			}
 		}
@@ -237,7 +237,10 @@ void JSON::CreateJSON() {
 	renderer::MapRenderer mp_(tc_, set_);
 	RequestHandler rh_(tc_, mp_);
 
-	json::Array result_array;
+	json::Builder builder;
+	builder.StartArray();
+
+	
 
 	for (CommandDescription command : commands_) {
 		if (command.type == "Bus"s) {
@@ -249,19 +252,14 @@ void JSON::CreateJSON() {
 			double curvature = result.value().curvature;
 
 			if (stops == 0 && unique_stops == 0 && length == 0 && curvature == 0) {
-				json::Node node(json::Dict{ std::pair<std::string, json::Node>{"error_message"s, json::Node{ "not found"s}},
-						std::pair<std::string, json::Node>{"request_id"s, json::Node{ id }}
-					});
-				result_array.push_back(node);
+				builder.StartDict().Key("error_message"s).Value("not found"s).Key("request_id"s).Value(id).EndDict();
+				
 				continue;
 
 			}
-			json::Node node(json::Dict{ std::pair<std::string, json::Node>{ "curvature"s , json::Node{curvature}},
-				std::pair<std::string, json::Node>{ "request_id"s , json::Node{id}},
-				std::pair<std::string, json::Node>{ "route_length"s , json::Node{length}},
-				std::pair<std::string, json::Node>{ "stop_count"s , json::Node{stops}},
-				std::pair<std::string, json::Node>{ "unique_stop_count"s , json::Node{unique_stops}} });
-			result_array.push_back(node);
+			builder.StartDict().Key("curvature"s).Value(curvature).Key("request_id"s).Value(id).Key("route_length"s).Value(length).Key("stop_count"s).Value(stops)
+				.Key("unique_stop_count"s).Value(unique_stops).EndDict();
+			
 
 		}
 		else if (command.type == "Stop"s) {
@@ -269,21 +267,20 @@ void JSON::CreateJSON() {
 			std::set<std::string> result = rh_.GetBusesByStop(command.name);
 			
 			if (result == std::set{ std::string{ "No stops"s } }) {
-					json::Node node(json::Dict{ std::pair<std::string, json::Node>{"error_message"s, json::Node{ "not found"s}},
-						std::pair<std::string, json::Node>{"request_id"s, json::Node{ id }}
-						 });
-					result_array.push_back(node);
+				builder.StartDict().Key("error_message"s).Value("not found"s).Key("request_id"s).Value(id).EndDict();
+					
 					continue;
 			}
 			else {
+				builder.StartDict().Key("buses"s).StartArray();
 				json::Array array;
 				for (auto res : result) {
-					array.push_back(json::Node(res));
+					builder.Value(res);
+					
 				}
-				json::Node node_array(array);
-				json::Dict dict{ {"buses"s, node_array}, {"request_id"s, json::Node{ id }} };
-				json::Node node(dict);
-				result_array.push_back(node);
+				builder.EndArray();
+				builder.Key("request_id"s).Value(id).EndDict();
+				
 				continue;
 			}
 
@@ -292,15 +289,14 @@ void JSON::CreateJSON() {
 		else if (command.type == "Map"s) {
 			int id = command.id;
 			std::string result = rh_.RenderMap();
-			json::Node node_array(result);
-			json::Dict dict{ {"map"s, node_array}, {"request_id"s, json::Node{ id }} };
-			json::Node node(dict);
-			result_array.push_back(node);
+			builder.StartDict().Key("map"s).Value(result).Key("request_id"s).Value(id).EndDict();
+			
 			continue;
 		}
 
 	}
-	result_doc_ = json::Document{ json::Node{result_array} };
+	builder.EndArray();
+	result_doc_ = json::Document{ builder.Build()};
 }
 
 void JSON::PrintJSON() {

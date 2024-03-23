@@ -184,7 +184,7 @@ namespace json {
         return std::holds_alternative<Array>(value_);
     };
 
-    bool Node::IsMap() const {
+    bool Node::IsDict() const {
         return std::holds_alternative<Dict>(value_);
     };
 
@@ -227,8 +227,8 @@ namespace json {
         else throw std::logic_error("value is not Array");
     };
 
-    const Dict& Node::AsMap() const {
-        if (IsMap()) {
+    const Dict& Node::AsDict() const {
+        if (IsDict()) {
             return std::get<Dict>(value_);
         }
         else throw std::logic_error("value is not Dict");

@@ -10,6 +10,7 @@
 #include "json.h"
 #include "request_handler.h"
 #include "map_renderer.h"
+#include "json_builder.h"
 
 using namespace std::literals;
 

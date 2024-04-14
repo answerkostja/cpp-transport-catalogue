@@ -77,6 +77,12 @@ void JSON::FillCommand(const json::Dict& dict) {
 		if (key == "name"s && value.IsString()) {
 			command.name = value.AsString();
 		}
+		if (key == "from"s && value.IsString()) {
+			command.from = value.AsString();
+		}
+		if (key == "to"s && value.IsString()) {
+			command.to = value.AsString();
+		}
 	}
 
 	commands_.push_back(command);
@@ -173,6 +179,14 @@ void JSON::FillRender(const json::Dict& dict) {
 
 }
 
+void JSON::FillRoute(const json::Dict& dict) {
+	routeset::RouteSettings route_set;
+	route_set.bus_wait_time = dict.at("bus_wait_time").AsInt();
+	route_set.bus_velocity = dict.at("bus_velocity").AsDouble();
+
+	route_set_ = route_set;
+}
+
 
 
 
@@ -220,14 +234,21 @@ void JSON::Fill(std::string line) {
 					FillRender(value.AsDict());
 				}
 			}
+			if (key == "routing_settings") {
+				if (value.IsDict()) {
+					FillRoute(value.AsDict());
+				}
+			}
 		}
 	}
 }
 void JSON::DestructJSON() {
 	char c;
 	std::string line;
+	int i = 0;
 	while (std::cin.get(c)) {
 		line += c;
+		i++;
 	}
 	JSON::Fill(line);
 }
@@ -236,16 +257,23 @@ void JSON::DestructJSON() {
 void JSON::CreateJSON() {
 	renderer::MapRenderer mp_(tc_, set_);
 	RequestHandler rh_(tc_, mp_);
+	routeset::TransportRouter<double> tr(tc_, route_set_);
+	graph::DirectedWeightedGraph<double> graph = std::move(tr.GetGraph());
+	graph::Router<double> r(std::move(graph));
 
 	json::Builder builder;
 	builder.StartArray();
 
-	
+	int iter = 0;
 
 	for (CommandDescription command : commands_) {
+
+		iter++;
+		int id = command.id;
+
 		if (command.type == "Bus"s) {
 			std::optional<RequestHandler::BusInfo> result = rh_.GetBusStat(command.name);
-			int id = command.id;
+			
 			int stops = result.value().stops;
 			int unique_stops = result.value().unique_stops;
 			double length = result.value().length;
@@ -263,7 +291,7 @@ void JSON::CreateJSON() {
 
 		}
 		else if (command.type == "Stop"s) {
-			int id = command.id;
+			
 			std::set<std::string> result = rh_.GetBusesByStop(command.name);
 			
 			if (result == std::set{ std::string{ "No stops"s } }) {
@@ -287,17 +315,95 @@ void JSON::CreateJSON() {
 			
 		}
 		else if (command.type == "Map"s) {
-			int id = command.id;
+			
 			std::string result = rh_.RenderMap();
 			builder.StartDict().Key("map"s).Value(result).Key("request_id"s).Value(id).EndDict();
 			
 			continue;
+		}
+		else if (command.type == "Route") {
+			
+			int id_vertex_begin = tr.GetPair(tc_.FindStop(command.from)).begin;
+			int id_vertex_end = tr.GetPair(tc_.FindStop(command.to)).begin;
+			if (id_vertex_begin == id_vertex_end) {
+				builder.StartDict()
+					.Key("items"s)
+					.StartArray()
+					.EndArray()
+					.Key("request_id"s)
+					.Value(id)
+					.Key("total_time")
+					.Value(0)
+					.EndDict();
+				continue;
+			}
+			std::optional<typename graph::Router<double>::RouteInfo> route_info = std::move(r.BuildRoute(id_vertex_begin, id_vertex_end));
+			if (route_info == std::nullopt) {
+				builder.StartDict()
+					.Key("request_id"s)
+					.Value(id)
+					.Key("error_message"s)
+					.Value("not found"s)
+					.EndDict();
+
+				continue;
+			}
+			
+
+			
+			/*
+			std::cout << route_info.value().weight << std::endl;
+			for (int i = 0; i < route_info.value().edges.size(); i++) {
+				std::cout << tr.GetEdgesInfoMap().at(route_info.value().edges[i]).bus<<std::endl;
+			}*/
+
+			
+			builder.StartDict()
+				.Key("items"s)
+				.StartArray();
+
+			for (int i = 0; i < route_info.value().edges.size(); i++) {
+				size_t number_edge = route_info.value().edges[i];
+				if (tr.GetEdgesInfo(number_edge).expect) {
+						builder.StartDict()
+							.Key("type"s)
+							.Value("Wait"s)
+							.Key("stop_name")
+							.Value(tr.GetStop(tr.GetEdgesInfo(number_edge).to)->name)
+							.Key("time"s)
+							.Value(tr.GetEdgesInfo(number_edge).weight)
+							.EndDict();
+				}
+				else {
+					routeset::EdgeInfo edges_info = tr.GetEdgesInfo(number_edge);
+					builder.StartDict()
+						.Key("type"s)
+						.Value("Bus"s)
+						.Key("bus"s)
+						.Value(edges_info.bus)
+						.Key("span_count"s)
+						.Value(edges_info.span_count)
+						.Key("time"s)
+						.Value(edges_info.weight)
+						.EndDict();
+				}
+			}
+			builder.EndArray()
+				.Key("request_id"s)
+				.Value(id)
+				.Key("total_time"s)
+				.Value(route_info.value().weight)
+				.EndDict();
+
+			
 		}
 
 	}
 	builder.EndArray();
 	result_doc_ = json::Document{ builder.Build()};
 }
+
+
 
 void JSON::PrintJSON() {
 	json::Print(result_doc_, std::cout);
@@ -310,4 +416,8 @@ renderer::RenderSettings JSON::AsSettings() {
 
 transport::TransportCatalogue JSON::AsCatalogue() {
 	return tc_;
+}
+
+routeset::RouteSettings JSON::AsRouteSettings() {
+	return route_set_;
 }

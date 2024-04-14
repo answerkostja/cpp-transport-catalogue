@@ -11,6 +11,7 @@
 #include "request_handler.h"
 #include "map_renderer.h"
 #include "json_builder.h"
+#include "transport_router.h"
 
 using namespace std::literals;
 
@@ -35,6 +36,8 @@ public:
 		std::string type;      // Название команды
 		int id = 0;           // id маршрута или остановки
 		std::string name;
+		std::string from;
+		std::string to;
 	};
 
 	
@@ -49,6 +52,8 @@ public:
 
 	void FillRender(const json::Dict& dict);
 
+	void FillRoute(const json::Dict& dict);
+
 	void Fill(std::string line); 
 
 	void DestructJSON();
@@ -61,6 +66,8 @@ public:
 
 	transport::TransportCatalogue AsCatalogue();
 
+	routeset::RouteSettings AsRouteSettings();
+
 	
 
 private:
@@ -68,6 +75,10 @@ private:
 	std::vector<CommandDescription> commands_;
 	json::Document result_doc_ = json::Document{json::Node(nullptr)};
 	renderer::RenderSettings set_;
+	routeset::RouteSettings route_set_;
+	//routeset::TransportRouter<double> tr_;
+	
+
 	
 
 };

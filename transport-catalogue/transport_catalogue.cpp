@@ -174,4 +174,14 @@ namespace transport {
 		return stops_;
 	}
 
+	int TransportCatalogue::AsDistance(Stop* begin, Stop* end) {
+		transport::Domain::StopPtrPair pair_{ begin, end };
+		int result = distance.at(pair_);
+		return result;
+	};
+
+	transport::Domain::Stop* TransportCatalogue::AsNameToStop(std::string_view query) {
+		return stop_name_to_stop.at(query);
+	}
+
 }

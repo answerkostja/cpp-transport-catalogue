@@ -32,6 +32,10 @@ namespace transport {
 
 		std::deque<Stop> AsStop(); 
 
+		int AsDistance(Stop* begin, Stop* end);
+
+		Stop* AsNameToStop(std::string_view query); 
+
 	private:
 		std::deque<Stop> stops_;
 		std::unordered_map<std::string_view, Stop*> stop_name_to_stop;

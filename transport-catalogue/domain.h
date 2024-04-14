@@ -85,10 +85,6 @@ namespace transport {
 			std::string info;
 		};
 
-		
-
-	
-		
 	};
 
 }

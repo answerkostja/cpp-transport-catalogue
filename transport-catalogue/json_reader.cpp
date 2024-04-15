@@ -258,8 +258,8 @@ void JSON::CreateJSON() {
 	renderer::MapRenderer mp_(tc_, set_);
 	RequestHandler rh_(tc_, mp_);
 	routeset::TransportRouter<double> tr(tc_, route_set_);
-	graph::DirectedWeightedGraph<double> graph = std::move(tr.GetGraph());
-	graph::Router<double> r(std::move(graph));
+	
+	graph::Router<double> r(std::move(tr.graph_));
 
 	json::Builder builder;
 	builder.StartArray();
@@ -323,8 +323,8 @@ void JSON::CreateJSON() {
 		}
 		else if (command.type == "Route") {
 			
-			int id_vertex_begin = tr.GetPair(tc_.FindStop(command.from)).begin;
-			int id_vertex_end = tr.GetPair(tc_.FindStop(command.to)).begin;
+			int id_vertex_begin = tr.GetVertexPairStop(tc_.FindStop(command.from)).begin;
+			int id_vertex_end = tr.GetVertexPairStop(tc_.FindStop(command.to)).begin;
 			if (id_vertex_begin == id_vertex_end) {
 				builder.StartDict()
 					.Key("items"s)
@@ -337,7 +337,7 @@ void JSON::CreateJSON() {
 					.EndDict();
 				continue;
 			}
-			std::optional<typename graph::Router<double>::RouteInfo> route_info = std::move(r.BuildRoute(id_vertex_begin, id_vertex_end));
+			std::optional<typename graph::Router<double>::RouteInfo> route_info = (tr.BuildOptimalRoute(r, id_vertex_begin, id_vertex_end));
 			if (route_info == std::nullopt) {
 				builder.StartDict()
 					.Key("request_id"s)

@@ -259,7 +259,7 @@ void JSON::CreateJSON() {
 	RequestHandler rh_(tc_, mp_);
 	routeset::TransportRouter<double> tr(tc_, route_set_);
 	
-	graph::Router<double> r(std::move(tr.graph_));
+	
 
 	json::Builder builder;
 	builder.StartArray();
@@ -323,8 +323,8 @@ void JSON::CreateJSON() {
 		}
 		else if (command.type == "Route") {
 			
-			int id_vertex_begin = tr.GetVertexPairStop(tc_.FindStop(command.from)).begin;
-			int id_vertex_end = tr.GetVertexPairStop(tc_.FindStop(command.to)).begin;
+			transport::Domain::Stop* id_vertex_begin = tc_.FindStop(command.from);
+			transport::Domain::Stop* id_vertex_end = tc_.FindStop(command.to);
 			if (id_vertex_begin == id_vertex_end) {
 				builder.StartDict()
 					.Key("items"s)
@@ -337,7 +337,7 @@ void JSON::CreateJSON() {
 					.EndDict();
 				continue;
 			}
-			std::optional<typename graph::Router<double>::RouteInfo> route_info = (tr.BuildOptimalRoute(r, id_vertex_begin, id_vertex_end));
+			std::optional<typename graph::Router<double>::RouteInfo> route_info = (tr.BuildOptimalRoute(id_vertex_begin, id_vertex_end));
 			if (route_info == std::nullopt) {
 				builder.StartDict()
 					.Key("request_id"s)

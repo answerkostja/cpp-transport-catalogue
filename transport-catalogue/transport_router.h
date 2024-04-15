@@ -30,13 +30,22 @@ namespace routeset{
 
 		TransportRouter() = default;
 
-		TransportRouter(transport::TransportCatalogue tc, routeset::RouteSettings rs) 
-			:graph_(tc.AsStop().size() * 2){
+		
+
+		TransportRouter(const transport::TransportCatalogue& tc, const routeset::RouteSettings& rs) 
+			:graph_(tc.AsStopSize() * 2)
+			,router_(graph_)
+			{
 			FillEdges(tc, rs);
+			router_ = graph::Router<Weight>{ graph_ };
+
 		}
-			
-		Number GetVertexPairStop(transport::Domain::Stop* link) {
-			return pair_stops_.at(link);
+
+		
+		std::optional<typename graph::Router<double>::RouteInfo> BuildOptimalRoute(transport::Domain::Stop* from, transport::Domain::Stop* to) {
+			int begin = GetVertexPairStop(from).begin;
+			int end = GetVertexPairStop(to).begin;
+			return router_.BuildRoute(begin, end);
 		}
 
 		transport::Domain::Stop* GetStop(size_t number) {
@@ -54,16 +63,18 @@ namespace routeset{
 		EdgeInfo GetEdgesInfo(size_t number) {
 			return edges_info_.at(number);
 		}
-
-		std::optional<typename graph::Router<double>::RouteInfo> BuildOptimalRoute(graph::Router<double> router_, int from, int to) {
-			return router_.BuildRoute(from, to);
-		}
 	
-		Graph graph_;
+		
 
 	private:
 
-		void FillEdgesStop(transport::TransportCatalogue tc, routeset::RouteSettings rs) {
+		Number GetVertexPairStop(transport::Domain::Stop* link) {
+			return pair_stops_.at(link);
+		}
+
+		
+
+		void FillEdgesStop(const transport::TransportCatalogue& tc, const routeset::RouteSettings& rs) {
 			size_t number = 0;
 			for (auto stop : tc.AsStop()) {
 				graph::Edge<double> edge{ number, number + 1, static_cast<double>(rs.bus_wait_time) };
@@ -74,7 +85,7 @@ namespace routeset{
 			}
 		}
 
-		void FillEdgesBus(transport::TransportCatalogue tc, routeset::RouteSettings rs) {
+		void FillEdgesBus(const transport::TransportCatalogue& tc, const routeset::RouteSettings& rs) {
 			for (auto bus : tc.AsBus()) {
 				for (size_t i = 0; i < bus.stops.size() - 1; i++) {
 					double weight = 0;
@@ -87,15 +98,16 @@ namespace routeset{
 				}
 			}
 		}
-		void FillEdges(transport::TransportCatalogue tc, routeset::RouteSettings rs) {
+		void FillEdges(const transport::TransportCatalogue& tc, const routeset::RouteSettings& rs) {
 			FillEdgesStop(tc, rs);
 			FillEdgesBus(tc, rs);
 		}
 
 
-		
+		Graph graph_;
 		std::unordered_map<transport::Domain::Stop*, Number> pair_stops_;
 		std::unordered_map<size_t, EdgeInfo> edges_info_;
+		graph::Router<Weight> router_;
 		
 	};
 }

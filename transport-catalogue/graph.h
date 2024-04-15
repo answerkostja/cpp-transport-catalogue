@@ -28,6 +28,12 @@ public:
     explicit DirectedWeightedGraph(size_t vertex_count);
     EdgeId AddEdge(const Edge<Weight>& edge);
 
+    DirectedWeightedGraph& operator=(DirectedWeightedGraph other) {
+        this->edges_ = other.edges_;
+        this->incidence_lists_ = other.incidence_lists_;
+        return *this;
+    }
+
     size_t GetVertexCount() const;
     size_t GetEdgeCount() const;
     const Edge<Weight>& GetEdge(EdgeId edge_id) const;

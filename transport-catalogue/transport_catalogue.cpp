@@ -170,8 +170,20 @@ namespace transport {
 		return buses_;
 	}
 
+	std::deque<transport::Domain::Bus> TransportCatalogue::AsBus() const{
+		return buses_;
+	}
+
 	std::deque<transport::Domain::Stop> TransportCatalogue::AsStop() {
 		return stops_;
+	}
+
+	std::deque<transport::Domain::Stop> TransportCatalogue::AsStop() const{
+		return stops_;
+	}
+
+	size_t TransportCatalogue::AsStopSize() const{
+		return stops_.size();
 	}
 
 	int TransportCatalogue::AsDistance(Stop* begin, Stop* end) {
@@ -180,7 +192,17 @@ namespace transport {
 		return result;
 	};
 
+	int TransportCatalogue::AsDistance(Stop* begin, Stop* end) const{
+		transport::Domain::StopPtrPair pair_{ begin, end };
+		int result = distance.at(pair_);
+		return result;
+	};
+
 	transport::Domain::Stop* TransportCatalogue::AsNameToStop(std::string_view query) {
+		return stop_name_to_stop.at(query);
+	}
+
+	transport::Domain::Stop* TransportCatalogue::AsNameToStop(std::string_view query) const{
 		return stop_name_to_stop.at(query);
 	}
 

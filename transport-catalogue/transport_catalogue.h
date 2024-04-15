@@ -30,11 +30,21 @@ namespace transport {
 
 		std::deque<Bus> AsBus(); 
 
+		std::deque<Bus> AsBus() const;
+
 		std::deque<Stop> AsStop(); 
+
+		std::deque<Stop> AsStop() const;
+
+		size_t AsStopSize() const;
 
 		int AsDistance(Stop* begin, Stop* end);
 
+		int AsDistance(Stop* begin, Stop* end) const;
+
 		Stop* AsNameToStop(std::string_view query); 
+
+		Stop* AsNameToStop(std::string_view query) const;
 
 	private:
 		std::deque<Stop> stops_;
